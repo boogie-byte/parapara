@@ -1,0 +1,1 @@
+`parapara` is a simple tool for running multiple instances of the same command in parallel (think GNU `parallel` simplified).
