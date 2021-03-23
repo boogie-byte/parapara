@@ -20,9 +20,8 @@ import (
 var (
 	errorCounter uint64
 
-	jobs    int
-	logdir  string
-	argvars map[string]string
+	jobs   int
+	logdir string
 )
 
 var rootCmd = &cobra.Command{
@@ -41,7 +40,7 @@ func openFile(name string) (*os.File, error) {
 	return f, err
 }
 
-func worker(ctx context.Context, wg *sync.WaitGroup, id int, name string, args []string) {
+func worker(ctx context.Context, wg *sync.WaitGroup, id int, name string, rawArgs []string) {
 	defer wg.Done()
 
 	outFileName := fmt.Sprintf("%s.%d.out", name, id)
@@ -58,15 +57,9 @@ func worker(ctx context.Context, wg *sync.WaitGroup, id int, name string, args [
 	}
 	defer errFile.Close()
 
-	for k, v := range argvars {
-		k = "{" + k + "}"
-		for i, s := range args {
-			args[i] = strings.ReplaceAll(s, k, v)
-		}
-	}
-
+	args := make([]string, len(rawArgs))
 	idString := strconv.Itoa(id)
-	for i, s := range args {
+	for i, s := range rawArgs {
 		args[i] = strings.ReplaceAll(s, "{#}", idString)
 	}
 
@@ -112,7 +105,6 @@ func init() {
 
 	rootCmd.Flags().IntVarP(&jobs, "jobs", "j", 0, "number of parallel jobs")
 	rootCmd.Flags().StringVarP(&logdir, "logdir", "l", cwd, "job output logs directory")
-	rootCmd.Flags().StringToStringVarP(&argvars, "var", "v", nil, "additional variables for interpolation in args")
 }
 
 func main() {
